@@ -1,0 +1,1066 @@
+1. What is Variable Shadowing?
+--local variable hides the instance variables inside that scope and takes precedence
+
+  public class MyClass {
+    private String name;
+    private int age;
+
+    public MyClass(String name, int age) {
+      name = name;
+      age = age;
+    }
+
+    void myMethod() {
+      System.out.println("name : " + name + " and age : " + age);
+    }
+
+    public static void main(String[] args) {
+      MyClass myObj = new MyClass("xyz", 25);
+      myObj.myMethod();
+    }
+  }
+>> name : null and age : 0
+
+
+2. What will be the output of the following snippet
+    int a=5, b=5, c=7;
+        if(a>b++ && a<c++){
+            System.out.println("IF: "+a+"&"+b+"&"+c);
+        }else{
+            System.out.println("ELSE: "+a+"&"+b+"&"+c);
+        }
+>> ELSE: 5&6&7
+
+
+
+3.  Whats the difference between heap memory and String pool memory? 
+What will be the output of the below?
+public class Test {
+    public static void main(String[] args) {
+        String s1 = "Java";
+        String s2 = new String("Java");
+        String s3 = s2.intern();
+  
+        System.out.println(s1 == s2); // Line 1
+        System.out.println(s1 == s3); // Line 2
+    
+    String s4 = "Ja"+"va";
+    String s5 = "Ja";
+    String s6 = s5 + "va";
+    
+    System.out.println(s1 == s4); // Line 3
+        System.out.println(s1 == s6); // Line 4
+    }
+}
+>> Line-1 : False
+>> Line-2 : True
+>> Line-3 : True
+>> Line-4 : False
+
+
+
+
+
+4. In java every class implicitly extends the Object class, making Object class the ultimate parent of all classes. However java does not support multiple inheritance.
+  class A{
+    // A implicitly inherits from Object
+  }
+  
+  class B extends A{
+    // B inherits from A , and A ultimately iherits from Object
+  }
+In this scenario:
+q1. Does class B exhibit multiple inheritance?  why or why not
+-- No, B does not exhibit multiople inheritance. In java a class can have only one direct superclass. B extends A, and A extends Object, maintainig single inheritance chain
+q2. If class A overrides the toString() method from Object, which versio n will class B inherits
+-- Class B will inherit the overridden toString() method from A because method resolution follows the inheritance hierarchy
+
+
+
+5. Can an Abstract calss be instantiated? (NO)
+   Can an Abstract calss have a constuctor? (Yes) 
+   Why Costructor then if we can not instantiate? (It helps in initialize common properties that all subclass will inherit)
+Will this code compile? If yes, what will be the output
+  abstarct class A {
+    public A() {
+      System.out.println("Abstract class Constuctor");
+    }
+  }
+  
+  class B extends A {
+    public B() {
+      System.out.println("Subclass Constructor");
+    }
+  }
+  
+  public static void main(String[] args) {
+        B obj = new B();
+  }
+  
+-- Abstract class Constuctor
+   CSubclass Constructor
+   
+6. What will be the output?
+  interface A{
+    int x = 10;
+  }
+
+
+
+  class B implements A{
+    void show(){
+      x = 20;
+      System.out.println(x);
+    }
+    
+     public static void main(String[] args) {
+      B obj = new B();
+      obj.show();
+    }
+  }  
+
+
+
+-- Compilation error as all variables in an interface are public static final by default.
+
+
+
+7. What will be the output
+  public class MyClass{
+    static  int myMethod(){
+      try{
+        return 10;
+      }finally {
+        return 20;
+      }
+    }
+    public static void main(String[] args) {
+      System.out.println(myMethod());
+    }
+  }
+  
+-- 20
+
+
+
+8. which exception propagtes from the below code snippet 
+  static void myMethod(){
+        try{
+            throw new RuntimeException("exception from try");
+        }catch (Exception e) {
+            throw new RuntimeException("exception from catch");
+        }finally {
+            throw  new RuntimeException("exception from finally");
+        }
+    }
+
+
+
+-- Exception thrown in finally overides the original exception
+
+
+
+9. Difference Between Comparable and Comparator in Java
+Feature               Comparable[java.lang]                         Comparator[java.util]
+Definition               Used to define natural ordering of objects.       Used to define custom ordering of objects.
+Method                 compareTo(T obj)                     compare(T obj1, T obj2)
+Method                 Returns 0 (equal), < 0 (less than), > 0 (greater than)   Same as compareTo()
+Modifies Original Class?       Yes, must implement Comparable<T> inside the class.   No, implements Comparator<T> externally.
+Sorting Flexibility         Only one sorting order.                   Multiple sorting orders possible.
+Example Usage             Collections.sort(list)(if class implements Comparable)  Collections.sort(list, comparator) (uses Comparator).
+  
+10. What will be the output of the below program
+  class D implements Comparable<D> {
+    int x;
+   
+    D(int x) {
+      this.x = x;
+    }
+   
+    public int compareTo(D d) {
+      return this.x - d.x;
+    }
+  }
+   
+  public class Test {
+    public static void main(String[] args) {
+      List<D> list = new ArrayList<>();
+      list.add(new D(2));
+      list.add(null);
+      list.add(new D(1));
+      
+      Collections.sort(list);
+      System.out.println(list);
+    }
+  }
+  
+-- null can not be sorted using comparable -- above code gives null pointer exception
+
+11. 
+  class MyClass {
+    int id;
+    
+    MyClass(int id) { this.id = id; }
+    
+    public int hashCode() { return id; }
+    
+    public boolean equals(Object obj) { return ((MyClass)obj).id == this.id; }
+  }
+   
+  public class Test {
+    public static void main(String[] args) {
+      Map<MyClass, String> map = new HashMap<>();
+      MyClass k1 = new MyClass(1);
+      
+      map.put(k1, "A");
+      k1.id = 2;
+      
+      System.out.println(map.get(new MyClass(1)));
+    }
+  }
+  
+-- null >>  After modifying k1.id, its hash changes, making the key untraceable.
+-- Rule: Never modify an object after inserting it into a HashMap.
+
+12. Whats the differenece between Fail-Fast and Fail-Safe
+-- Fail-fast: Throws ConcurrentModificationException if modified during iteration. (e.g., ArrayList, HashMap).
+-- Fail-safe: Works on a copy, allowing modifications (e.g., CopyOnWriteArrayList, ConcurrentHashMap).
+
+
+
+13. Can A static method be overriden in Java?
+  class Parent {
+    static void show() { System.out.println("Parent static method"); }
+  }
+   
+  class Child extends Parent {
+    static void show() { System.out.println("Child static method"); }
+  }
+   
+  public class StaticOverride {
+    public static void main(String[] args) {
+      Parent obj = new Child();
+      obj.show();
+    }
+  }
+>> Ststic methods are not over ridden; they are hidden
+
+
+
+14. What is covarinat return type?
+--subclass method return type is same as that of super class method return type or sub class return type may be a subset of super class method return type.
+
+
+
+15. What are exception handling rules in method overriding?
+-- If superclass method does not declare an exception, subclass overridden method can not declare the checked exception but it can declare unchecked exception
+-- If superclass method declares an exception, subclass overridden method can declare the same or subclass or no exception but it can not declare parent exception
+
+
+
+16. Whats the diff b/w Final - Finally & Finalize
+--Final: A keyword used to restrict modification of variables, methods, or classes
+--Finally: A block used for cleanup code in exception handling
+--Finalize: A method used by the garbage collector before an object is destroyed
+
+
+
+  public class MyClass {
+    int data = 10;
+    public static void main(String[] args) {
+      final MyClass myObj = new MyClass();
+      myObj.data = 20;
+      System.out.println(myObj.data);
+    }
+  }
+-- 20
+
+
+
+17. Why java main method is static?
+-- It allows jvm to call main with out creating an object and there's no existing object initially, so it must be static to be called directly
+
+
+
+18. What is Autoboxing?
+-- The automatic convertion of primitive data type into its corresponding wrapper class
+
+
+
+19. Can a class with a private constructor be instantiated?
+-- Yes, but only within the class itself
+
+
+
+20. Thread life cycle?
+-- At any point of time, a java thread can lie in any one of the following states [NEW, RUNNABLE, RUNNING, WAITING, TERMINATED]
+
+
+
+21. How many ways a thread can be created?
+-- 1. Extending a thread class
+-- 2. Implementing Runnable interface
+-- 3. Using callable n Future task
+-- 4. Using executor
+
+
+
+22. Synchronized vs Volatile vs Transient Non Access Specifiers
+-- Synchronized > Ensures that only one thread can execute a block/method at a time
+-- Volatile > Ensures that the variable is always read from main memory, not from a threads local cache
+-- Transient > Prevents a variable from being serialized
+
+
+
+23. Whats happends when you swap @Service and @Repository?
+-- both are specilizations of @component, so swappiung them wont break the functionality - but the exception transalation wont happen.
+
+
+
+
+
+24. I have Employee class with varibales name, city and dept. Get a list of all employees who lives in Delhi City?
+-- employees.stream().filter(e -> "Delhi".equalsIgnoreCase(e.getCity())).map(Employee::getName).collect(Collectors.toList);
+-- or 
+-- Map<String, List<String> namesByCity = employees.stream.collect(Collectors.groupingBy(Employee::city, Collectors.mapping(Employee::getName, Collectors.toList())));
+namesByCity.get("Delhi");
+
+
+
+25. What is Optional in Java?
+-- Optional is a container object used to avoid null references and prevent NullPointerException
+
+
+
+26. Difference between Optional.of() and Optional.ofNullable()?
+-- Optional.of() throws NullPointerException if the value is null
+-- Optional.ofNullable() accepts null or non-null values
+
+27.  What are the main components of a Stream?
+-- Source – e.g., Collection, array.
+-- Intermediate Operations (Lazy, return a Stream)
+  filter(Predicate) – Filters elements based on a condition.
+  map(Function) – Transforms elements.
+  flatMap(Function) – Flattens nested structures.
+  distinct() – Removes duplicate elements.
+  sorted() – Sorts elements.
+  peek(Consumer) – Performs an action without modifying elements.
+  limit(long) – Limits the number of elements.
+  skip(long) – Skips the first n elements.
+-- Terminal Operations (Eager, return a result)
+  forEach(Consumer) – Processes each element.
+  collect(Collector) – Converts stream into a collection.
+  count() – Counts elements.
+  reduce(BinaryOperator) – Aggregates elements.
+  anyMatch(Predicate) [Emptystream-> false], allMatch(Predicate) [Emptystream-> true], noneMatch(Predicate) [Emptystream-> true] – Match operations.
+  findFirst(), findAny() – Finds elements.
+  toArray() – Converts stream into an array.
+  min(Comparator), max(Comparator) – Finds minimum or maximum.
+  sum(), average() – Works with numeric streams.
+
+
+
+28. what is the use of optional if Iwe can deal with null check?
+-- Avoids NullPointerException – Optional enforces handling of missing values explicitly, reducing the chances of unexpected NullPointerException.
+-- Improves Readability – It makes the code more readable and intentional. Instead of scattered null checks, you clearly indicate that a value might be absent.
+-- Encourages Functional Programming – Optional supports methods like map(), filter(), and ifPresent() to work with values in a more declarative way.
+-- Provides Better API Design – When returning values from methods, Optional<T> signals to consumers that the value might not be present, guiding them to handle the case properly.
+-- Reduces Boilerplate Code – Instead of multiple if checks and null assignments, Optional provides built-in methods like orElse(), orElseGet(), and orElseThrow() to handle default cases efficiently.
+
+
+
+29. Stream vs ParallelStream?
+-- Feature       stream()         parallelStream()
+-- Execution     Single-threaded     Multi-threaded (parallel)
+-- Performance     Predictable       May be faster with large data
+-- Use Case     Small-medium datasets   Large datasets with CPU power
+
+
+
+30.  Difference between map() and flatMap()?
+-- map() → transforms each element
+eg. List<String> names = List.of("Alice", "Bob");
+  List<Integer> lengths = names.stream()
+                 .map(String::length)
+                 .toList(); // [5, 3]
+-- flatMap() → flattens nested structures and then transforms
+eg. List<List<String>> nestedList = List.of( List.of("a", "b"), List.of("c", "d"));
+  List<String> flattenedList =  nestedList.stream()
+                      .flatMap(List::stream)
+                      .toList(); // ["a", "b", "c", "d"]
+
+
+
+31. Difference between Loop and Stream?
+-- Loop (Imperative Approach)
+  - Uses traditional constructs (for, while, do-while) to iterate through elements
+  - Explicitly defines each step in the iteration
+  - Requires manual handling of accumulation, filtering, and transformations
+-- Stream (Declarative Approach)
+  - Uses functional programming concepts
+  - Provides built-in operations like map(), filter(), collect(), making code more concise
+  - Allows parallel processing (parallelStream())
+  - Improves readability and maintainability
+  
+32. How do you reduce elements in a Stream?
+-- Using reduce():
+-- int sum = list.stream().reduce(0, Integer::sum);
+
+
+
+33. Predicate, Function, Consumer, and BiConsumer are key functional interfaces with distinct purposes?
+-Predicate<T>
+  - Represents a boolean-valued function
+  - Used for conditional checks (test() method)
+    eg. Predicate<Integer> isEven = num -> num % 2 == 0;
+    System.out.println(isEven.test(4)); // true
+
+
+
+-Function<T, R>
+  - Transforms an input (T) into an output (R)
+  - Used for mapping or conversions (apply() method)
+  eg. Function<String, Integer> lengthFunction = str -> str.length();
+    System.out.println(lengthFunction.apply("Hello")); // 5
+    
+-Consumer<T>
+  - Accepts an input (T) but does not return a value
+  - Used for performing actions (accept() method)
+  eg. Consumer<String> printConsumer = str -> System.out.println(str);
+    printConsumer.accept("Hello, World!"); // Prints "Hello, World!"
+    
+-BiConsumer<T, U>
+  - Takes two inputs (T, U) without returning a value
+  - Used for actions that require two parameters (accept() method)
+  eg. BiConsumer<String, Integer> printBiConsumer = (str, num) -> System.out.println(str + ": " + num);
+    printBiConsumer.accept("Score", 90); // Prints "Score: 90"
+  
+34. What is a Functional Interface?
+-- An interface with a single abstract method, can have default/static methods. Used in lambda expressions.
+
+35. Can a Functional Interface extend another interface?
+-- Yes, but it must not inherit more than one abstract method, or it won’t remain functional.
+
+36. What is a Default Method in an Interface and why is it used?
+-- A method with a body in an interface (using default keyword). Used to add new methods to interfaces without breaking implementing classes.
+
+37.  What is a Method Reference?
+-- A concise way to refer to methods:
+-- list.forEach(System.out::println); // same as lambda s -> System.out.println(s)
+
+
+
+38. What is Asynchronous Programming in Java?
+-- Asynchronous (async) programming allows tasks to run in the background without blocking the main thread. Useful for I/O, API calls, and long-running tasks.
+
+
+
+39. What is Future in Java?
+-- Future in Java is part of the java.util.concurrent package and represents a result of an asynchronous computation. It helps in executing tasks in the background and retrieving the results when needed
+-- You get the result later via future.get() (which blocks until done).
+  eg. ExecutorService executor = Executors.newSingleThreadExecutor();
+    Future<Integer> future = executor.submit(() -> 10 + 5);
+    System.out.println(future.get()); // blocks until result is ready
+    executor.shutdown();
+    
+40. What is CompletableFuture? 
+-- CompletableFuture is an advanced feature in Java’s java.util.concurrent package for handling asynchronous programming. It extends Future but provides non-blocking operations, making it more powerful. It supports supports: Chaining (thenApply, thenAccept), Combining (thenCombine), Exception Handling (exceptionally, handle), Running multiple tasks in parallel
+  eg. CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+      return "Hello, World!";
+    });
+    future.thenAccept(System.out::println); // Prints asynchronously
+    
+  - supplyAsync()  Runs a task asynchronously that returns a result.  
+  - thenApply()  Transforms the result.
+  - thenAccept()  Consumes the result.
+  - exceptionally()  Handles exceptions.
+  - thenCombine()  Combines two futures.
+
+41. What is ExecutorService (Thread Pool)?
+-- A thread pool manager used to execute async tasks. Avoids creating new threads for every task (better performance).
+- ExecutorService executor = Executors.newFixedThreadPool(5);
+  eg.
+  executor.submit(() -> {
+    System.out.println("Running task in background");
+  });
+  executor.shutdown();
+- newFixedThreadPool(n)  Fixed number of threads.
+- newCachedThreadPool()  Creates new threads as needed.
+- newSingleThreadExecutor()  One thread, tasks run sequentially.
+
+
+
+42. Immutable Object Design Pattern?
+- Declare the class as final – Prevents inheritance and modifications.
+- Make all fields private and final – Prevents direct access and modification.
+- Provide no setters – Avoid modifying existing data.
+- Initialize fields via constructor – Assign values during object creation.
+- Return defensive copies of mutable objects – Prevent unintended modifications.
+
+
+
+eg.
+  public final class ImmutablePerson {
+    private final String name;
+    private final int age;
+
+
+
+    public ImmutablePerson(String name, int age) {
+      this.name = name;
+      this.age = age;
+    }
+
+
+
+    public String getName() {
+      return name;
+    }
+
+
+
+    public int getAge() {
+      return age;
+    }
+  }
+-- Handling Mutable Fields [If the class has mutable fields like List or Date, return a defensive copy]
+eg. 
+  public final class ImmutableData {
+    private final List<String> items;
+
+
+
+    public ImmutableData(List<String> items) {
+      this.items = new ArrayList<>(items); // Defensive copy
+    }
+
+
+
+    public List<String> getItems() {
+      return new ArrayList<>(items); // Defensive copy
+    }
+  }
+
+
+
+43. Factory Design Pattern?
+-- The Factory Design Pattern is a creational pattern that provides a way to instantiate objects without exposing the instantiation logic. It creates objects based on given parameters, promoting loose coupling and flexibility.
+eg.
+  interface Shape {
+    void draw();
+  }
+
+
+
+  class Circle implements Shape {
+    public void draw() {
+      System.out.println("Drawing Circle");
+    }
+  }
+
+
+
+  class Square implements Shape {
+    public void draw() {
+      System.out.println("Drawing Square");
+    }
+  }
+
+
+
+  class ShapeFactory {
+    public static Shape getShape(String type) {
+      if ("CIRCLE".equalsIgnoreCase(type)) {
+        return new Circle();
+      } else if ("SQUARE".equalsIgnoreCase(type)) {
+        return new Square();
+      }
+      return null;
+    }
+  }
+
+
+
+  // Usage
+  Shape shape = ShapeFactory.getShape("CIRCLE");
+  shape.draw(); // Drawing Circle
+
+
+
+44. Singleton Design Pattern?
+-- The Singleton Pattern ensures only one instance of a class exists globally and provides a single access point.
+eg.
+  public class Singleton {
+    private static Singleton instance;
+
+
+
+    private Singleton() {} // Private constructor
+
+
+
+    public static Singleton getInstance() {
+      if (instance == null) {
+        instance = new Singleton();
+      }
+      return instance;
+    }
+  }
+
+
+
+45. Inversion of Control (IoC) and Dependency Injection (DI)?
+-- In Spring Boot, Inversion of Control (IoC) and Dependency Injection (DI) are fundamental concepts that allow the framework to manage object creation and dependencies efficiently.
+
+
+
+46. Inversion of Control (IoC)?
+-- IoC shifts the responsibility of managing dependencies from the application code to the Spring IoC Container. Instead of manually creating objects, Spring handles this through beans.
+
+
+
+47. Dependency Injection (DI)?
+-- DI is the technique used to implement IoC. Spring Boot injects dependencies automatically, avoiding tight coupling and improving maintainability.
+
+
+
+48 Types of Dependency Injection in Spring Boot?
+- Constructor Injection (Recommended) – Dependencies are provided via constructor. [Best for immutability and testability, Cleaner code, no unnecessary annotations]
+eg. 
+  @Service
+  public class MyService {
+    private final MyRepository repository;
+
+
+
+    public MyService(MyRepository repository) {  // No @Autowired needed, explicit mention of @Autowired also fine not an issue
+      this.repository = repository;
+    }
+
+
+
+    public void execute() {
+      repository.process();
+    }
+  }
+
+
+
+- Setter Injection – Dependencies are set through setter methods. [Used for optional dependencies, Allows modification- drawback, reducing immutability]
+eg.
+@Service
+  public class MyService {
+    private MyRepository repository;
+
+
+
+    public void setRepository(MyRepository repository) { // Setter Injection // No @Autowired needed, explicit mention of @Autowired also fine not an issue
+      this.repository = repository;
+    }
+
+
+
+    public void execute() {
+      repository.process();
+    }
+  }
+
+
+
+- Field Injection – Dependencies are injected directly into fields using annotations (@Autowired). [Not recommended due to tight coupling, Hard to mock in unit tests]
+eg.
+  @Service
+  public class MyService {
+    private MyRepository repository; // No @Autowired needed, explicit mention of @Autowired also fine not an issue
+
+
+
+    public MyService() {} // Default constructor
+
+
+
+    public void execute() {
+      repository.process();
+    }
+  }
+
+
+
+
+
+49. Stereotype Annotations in Spring
+-- Stereotype annotations in Spring are special meta-annotations used to define Spring-managed components (beans). They help in classifying components based on their roles in the application.
+- @Component → Marks a class as a Spring-managed bean.
+- @Service / @Repository → Specialized components for business logic and data access.
+- @Autowired → Injects dependencies automatically.
+- @Qualifier → Specifies which bean to inject when multiple options exist. [not a stero type one]
+- @Configuration + @Bean → Defines beans manually in Spring configuration.
+- @Controller → Specialized version of @Component for web controllers. Works with Spring MVC to handle requests.
+- @RestController → Combination of @Controller + @ResponseBody. Directly returns JSON responses instead of views.
+
+
+
+50. Autowiring in Spring
+-- Autowiring is a mechanism in Spring that automatically injects dependencies, eliminating the need for explicit bean wiring. It helps reduce boilerplate code and improves maintainability
+
+
+
+- No Autowiring (Manual Injection)
+  . Dependencies are explicitly passed via configuration.
+  . Used when @Autowired is disabled.
+  eg.
+  @Configuration
+  public class AppConfig {
+    @Bean
+    public MyRepository myRepository() {
+      return new MyRepository();
+    }
+
+
+
+    @Bean
+    public MyService myService() {
+      return new MyService(myRepository()); // Manual injection
+    }
+  }
+
+
+
+- Autowiring by Name (byName)
+  . Spring matches bean name to the field/property name.
+  . Requires @Qualifier to specify the exact bean.
+  eg.
+  @Service
+  public class MyService {
+    @Autowired
+    @Qualifier("myRepository") // Matches bean name
+    private MyRepository repository;
+  }
+
+
+
+  @Configuration
+  public class AppConfig {
+    @Bean(name = "myRepository") // Defines bean name explicitly
+    public MyRepository repository1() {
+      return new MyRepository();
+    }
+  }
+
+
+
+- Autowiring by Type (byType)
+  . Spring injects dependencies based on type.
+  . Works only when there is a single bean of that type.
+  eg.
+  @Service
+  public class MyService {
+    @Autowired // Injects based on type
+    private MyRepository repository;
+  }
+
+
+
+  @Configuration
+  public class AppConfig {
+    @Bean
+    public MyRepository myRepository() { // Single bean of MyRepository type
+      return new MyRepository();
+    }
+  }
+  
+- Constructor Injection (constructor)
+  . Spring injects dependencies via the constructor.
+  eg.
+  @Service
+  public class MyService {
+    private final MyRepository repository;
+
+
+
+    @Autowired
+    public MyService(MyRepository repository) { // Constructor Injection
+      this.repository = repository;
+    }
+  }
+
+
+
+- Autodetect (autodetect) (Deprecated)
+  . Used to first try constructor injection, then fall back to byType.
+  . Removed in Spring 3.0, so not applicable in modern Spring Boot.
+  
+>>✅ Constructor Injection → Recommended for cleaner, immutable design. 
+>>✅ By Type → Works well for single bean types. 
+>>✅ By Name → Use when multiple beans of the same type exist. 
+>>❌ Autodetect → Deprecated, avoid using.
+
+
+
+51. @Bean vs @Component?
+-- @Component
+  - Used for automatic bean detection.
+  - Works with component scanning.
+  - Applied to class-level, turning the class into a Spring bean.
+  - Best for general components (services, repositories, controllers).
+  - ✅ Example: Using @Component (Auto-detected bean)
+
+
+
+-- @Bean
+  - Used for manual bean definition in a Java configuration class (@Configuration).
+  - Allows creating custom beans, factory methods, or third-party integrations.
+  - Preferred when defining beans that are not part of the application package.
+  - ✅ Example: Using @Bean (Manual bean declaration)
+  
+52. @Inject vs @Autowired in Spring Boot?
+-- Both @Inject (from Jakarta/CDI) and @Autowired (from Spring) are used for dependency injection.
+- @Autowired (Spring-Specific)
+  - Spring framework annotation for dependency injection.
+  - Supports optional dependencies via required=false.
+  - Allows qualifier-based injection (@Qualifier).
+- @Inject (Jakarta/CDI Standard)
+  - Part of Jakarta EE / Java CDI, not Spring-specific.
+  - No required=false option (optional dependencies require manual handling).
+  - Works independently of Spring (can be used in non-Spring projects).
+  
+53. ApplicationContext and BeanFactory?
+-- Both are used for managing beans
+- BeanFactory
+  - It is a basic, lightweight container for managing beans.
+  - Provides lazy initialization, meaning beans are created only when requested.
+  - Suitable for simple applications with minimal dependency management needs.
+  - Does not support automatic component scanning or annotations like @PostConstruct.
+- ApplicationContext:
+  - It extends BeanFactory and provides advanced features.
+  - Supports eager initialization, meaning beans are created when the container starts.
+  - Has built-in support for AOP, event propagation, and internationalization.
+  - Can load properties and handle messaging.
+
+54. Sealed Modifier [Improves security]?
+-- Allows you to control which classes or interfaces can extend or implement a class/interface
+eg. 
+public sealed class Vehicle permits Car,Truck{} >> Restrics which classes can extend this class or implement the interface
+public final class Car extends Vehicle{} >>  the class can not extend further
+public non-sealed class Truck extends Vehicle{} >> non-sealed means open for extendion like normal classes
+
+55. Record in Java?
+-- It is a special class in Java used to model immutable data - like lightweight datacarrier or POJO with less Boilerplate
+-- to simplify the creation of value clases - classes that just hold data (like DTO's)- by automaticallky generating constructor/getters/equals/hashcode,toString
+eg.
+public record Person(String anme, int age)
+  === equals to ===
+public final class person{
+	private final String name;
+	private final int age;
+
+	// Public Constructor
+	// Getters
+	// hashCode
+	// equals
+	// toString
+
+56. Improvement in Hashmap (Java 8)
+-- performance enhancements under high concurrency and support for functional programming via streams and lambdas.
+a. Faster in Case of Collisions
+	-- When two keys in a HashMap go to the same bucket (i.e., hash collision), Java used to store them in a linked list.
+	-- In Java 8, if there are many items (more than 8) in a single bucket, Java converts that list to a tree (Red-Black Tree).
+	-- Trees are faster than lists, so searching becomes quicker — from slow (O(n)) to fast (O(log n)).
+b. New Helpful Methods Added
+	-- map.forEach((k, v) -> System.out.println(k + ": " + v));
+	-- map.computeIfAbsent("key", k -> "default value");
+	-- map.merge("key", 1, Integer::sum);
+
+56. Hashmap internal working [internally stores data as an array of linked lists]
+	1. A HashMap stores data as key-value pairs. [map.put("Apple", 10);] 
+		-- it accepts one null keeey and multiple null values
+		-- if key is null then it wont calculate haschcode() Java assigns hash as 0.
+	2. Call hashCode() on the Key [int hash = "Apple".hashCode();  // might return something like 63062875]
+	3. Hash Function (Hash Mixing > some extra operations on the hash to reduce collisions) [int h = key.hashCode(); int mixedHash = h ^ (h >>> 16);  // spreads the hash bits]
+	4. Calculate Index in the Array (Bucket Index) >> HashMap uses an array internally. To decide where to store the key [index = mixedHash % arrayLength]
+
+57. Arraylist vs LinkedList
+| Feature / Operation                     | `ArrayList`                                         | `LinkedList`                                  |
+| --------------------------------------- | --------------------------------------------------- | --------------------------------------------- |
+| **Underlying Data Structure**           | Dynamic array (resizable array)                     | Doubly linked list                            |
+| **Memory Usage**                        | Less (no pointers)                                  | More (extra memory for prev & next pointers)  |
+| **Element Access (get(index))**         | ✅ Fast → O(1) (direct index access)                | ❌ Slow → O(n) (must traverse from head/tail) |
+| **Insertion at End**                    | ✅ Fast → O(1) (amortized; resizing may occur)      | ✅ Fast → O(1)                                |
+| **Insertion at Middle or Start**        | ❌ Slow → O(n) (shifting elements)                  | ✅ Fast → O(1) if node known, else O(n)       |
+| **Removal from End**                    | ✅ Fast → O(1)                                      | ✅ Fast → O(1)                                |
+| **Removal from Middle or Start**        | ❌ Slow → O(n) (shifting elements)                  | ✅ Fast → O(1) if node known, else O(n)       |
+| **Search by Value (indexOf, contains)** | ❌ Slow → O(n)                                      | ❌ Slow → O(n)                                |
+| **Iterator Performance**                | Faster (better cache locality)                      | Slower due to node traversal                  |
+| **Reverse Traversal**                   | ❌ Not directly supported                           | ✅ Efficient (uses `previous` pointer)        |
+| **Traversal (for loop)**                | ✅ Faster                                           | ❌ Slower                                     |
+
+58. Treemap?
+-- A TreeMap is a type of Map in Java that stores key-value pairs in a sorted order, based on the keys using a Red-Black Tree (self-balancing binary search tree)
+-- No Null key is allowed but multiple null values allowed
+
+59. Spring Bean Life Cycle?
+	-- 🏭 Manufacture the machine → (Object is created)
+	-- 🔌 Plug it in → (Inject power = dependencies)
+	-- ⚙️ Initialize settings → (Run init methods)
+	-- ✅ Ready to work → (Bean is active)
+	-- 📴 Shutdown safely → (Run destroy methods)
+
+60. @Primary and @Qualifier
+	-- when multiple beans of the same type, Spring doesn’t know which one to inject
+eg.
+	@Component
+	public class Dog implements Animal {}
+
+	@Component
+	public class Cat implements Animal {}
+----
+		@Component
+		@Primary
+		public class Dog implements Animal {}
+
+		@Component
+		public class Cat implements Animal {}
+----
+	@Autowired
+	@Qualifier("cat")
+	private Animal animal;
+
+61. In how many ways an Object can be created in Java?
+-- Using new Keyword >> MyClass obj = new MyClass();
+-- Using Class.forName() and newInstance() >> MyClass obj = (MyClass) Class.forName("MyClass").newInstance();
+-- Using Class.getDeclaredConstructor().newInstance() (Reflection) >> MyClass obj = MyClass.class.getDeclaredConstructor().newInstance();
+-- Using clone() Method >> MyClass obj2 = (MyClass) obj1.clone();
+-- Using Deserialization >> ObjectInputStream in = new ObjectInputStream(new FileInputStream("data.ser")); MyClass obj = (MyClass) in.readObject();
+-- Using Factory Methods / Builders >> MyClass obj = MyClass.createInstance();
+-- Using Constructor Reference (Java 8+) >> Supplier<MyClass> supplier = MyClass::new; MyClass obj = supplier.get();
+
+62. Diff b/w ddep copy and shallow copy
+-- A shallow copy creates a new object, but it copies references of the inner objects — not the actual objects. So, both the original and the copied object share the same inner objects
+-- Deep Copy (Simple Definition): A deep copy creates a new object and also creates new copies of all inner objects. So, the original and the copied object are completely independent.
+
+eg.
+	class Address {
+		String city;
+	}
+
+	class Person {
+		String name;
+		Address address;
+	}
+----- Shallow
+		Person p1 = new Person();
+		p1.name = "John";
+		p1.address = new Address();
+		p1.address.city = "Delhi";
+
+		Person p2 = p1;  // Or use clone() if not deeply implemented
+
+		p2.name = "Doe";
+		p2.address.city = "Mumbai";
+
+		System.out.println(p1.address.city); // 👉 Output: Mumbai (same object)
+----- Deep
+	Person p2 = new Person();
+	p2.name = p1.name;
+	p2.address = new Address();          // create new inner object
+	p2.address.city = p1.address.city;   // copy values manually
+
+63. Runnable vs callable?
+	✅ Runnable:
+		Runnable is a Java interface used to run code in a thread.
+		It does not return any result and cannot throw checked exceptions.
+	-- public void run();  // No return, no checked exception
+
+	✅ Callable:
+		Callable is like Runnable, but it can return a result and can throw checked exceptions.
+	-- public V call() throws Exception;  // Returns a value, can throw exception
+
+64. What is try-with-resources?
+-- try-with-resources is a try block that automatically closes resources like files, streams, DB connections, etc., after use.
+-- It was introduced in Java 7 to avoid manual closing of resources.
+
+65. StringBuilder s1 = new StringBuilder("sas");
+	StringBuilder s2 = new StringBuilder("sas");
+	System.out.println(s1.equals(s2));  // false
+-- StringBuilder does not override the equals() method from the Object class.
+-- s1.equals(s2)  // same as  s1 == s2 (reference comparison)
+-- Even though the contents ("sas") are the same, the references are different, so equals() returns false.
+
+66. Map vs Flat Map
+--map():
+	- Transforms each element in the stream into another element.
+	- The result is a Stream of transformed elements.
+	- One-to-one mapping.
+	eg. 
+	List<String> names = List.of("Satya", "Ramya");
+
+	List<Integer> lengths = names.stream()
+		.map(String::length)
+		.collect(Collectors.toList()); 	//Output: [5, 5] — A list of string lengths.
+--flatMap():
+	- Transforms each element into a stream (or a collection), and then flattens all those streams into a single stream.
+	- One-to-many mapping.
+	- Commonly used when each element might result in multiple elements.
+	eg.
+	List<String> sentences = List.of("I love Java", "Streams are powerful");
+	List<String> words = sentences.stream()
+		.flatMap(sentence -> Arrays.stream(sentence.split(" ")))
+		.collect(Collectors.toList());	//Output: ["I", "love", "Java", "Streams", "are", "powerful"] — All words in a single flat list.
+
+
+======================================================================================================
+Databse
+======================================================================================================
+
+
+
+1. diff b/w delete drop n truncate
+DELETE - removes specific rows from a table. Can have where condition & rollback is possible [SLOW Perf]
+TRUNCATE - Removes all rows from a table but keps the structure [FASTER perf]
+DROP - Deletes the entire table (structure + data) [FASTEST perf]
+
+
+
+S1. You have an employees table with columns: id, name, age, salary, email and department. Write a query to fetch employees from the IT department earning more than 50,000.
+-- SELECT * FROM employee WHERE department = 'IT' AND salary > 50000;
+
+
+
+s2. Ensure that the salary column in the employees table does not allow negative values
+-- ALTER TABLE employees ADD CONSTRAINT chk_salary CHECK (salary >= 0);
+
+
+
+S3. Find all duplicate emails and their count from the employees table.
+-- SELECT email, COUNT(*) AS total FROM employee GROUP BY email HAVING COUNT(*) > 1;
+
+
+
+s4. Find the second highest salary from the employees table.
+-- SELECT DISTINCT salary FROM employee ORDER BY salary DESC LIMIT 1 OFFSET 1;
+
+
+
+s5. Find employees who do not belong to any department.
+-- SELECT e.name FROM employees e LEFT JOIN departments d ON e.dept_id = d.dept_id WHERE d.dept_id IS NULL;
+
+
+
+s6. You have two tables: employees (id, name, dept_id) & departments (dept_id, dept_name)
+Write a query to fetch all employees along with their department names.
+-- SELECT e.name, d.dept_name FROM employees e JOIN departments d ON e.dept_id = d.dept_id;
+
+
+
+s7. Delete all employees who have resigned before 2020-01-01 from resigned_employees table.
+-- DELETE FROM resigned_employees WHERE resign_date < '2020-01-01';
+
+
+
+s8. You deleted all records from the orders table but the auto-increment is still increasing. Reset it.
+-- TRUNCATE TABLE orders;
+
+
+
+s9. You have a products table with millions of records. Searching by product_name is slow. How do you optimize it?
+-- CREATE INDEX idx_product_name ON products(product_name);
