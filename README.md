@@ -47,3 +47,43 @@ GROUP BY GROUPING SETS (
   (date_trunc('year', created_on))
 )
 ORDER BY year, quarter, month, week, day;
+
+
+<<<<<<>>>>>
+
+SELECT
+  CASE
+    WHEN GROUPING(day) = 0 THEN 'DAILY'
+    WHEN GROUPING(week) = 0 THEN 'WEEKLY'
+    WHEN GROUPING(month) = 0 THEN 'MONTHLY'
+    WHEN GROUPING(quarter) = 0 THEN 'QUARTERLY'
+    WHEN GROUPING(year) = 0 THEN 'YEARLY'
+  END AS period_type,
+
+  day,
+  week,
+  month,
+  quarter,
+  year,
+
+  COUNT(*) AS case_count
+FROM (
+  SELECT
+    created_on AT TIME ZONE 'UTC' AS created_utc,  -- adjust timezone if needed
+
+    DATE(created_on AT TIME ZONE 'UTC')                         AS day,
+    DATE_TRUNC('week', created_on AT TIME ZONE 'UTC')::date     AS week,
+    DATE_TRUNC('month', created_on AT TIME ZONE 'UTC')::date    AS month,
+    DATE_TRUNC('quarter', created_on AT TIME ZONE 'UTC')::date  AS quarter,
+    DATE_TRUNC('year', created_on AT TIME ZONE 'UTC')::date     AS year
+  FROM case_table
+) t
+GROUP BY GROUPING SETS (
+  (day),
+  (week),
+  (month),
+  (quarter),
+  (year)
+)
+ORDER BY year, quarter, month, week, day;
+
