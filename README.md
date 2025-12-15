@@ -22,3 +22,28 @@ BEGIN
         part_start := part_end;
     END LOOP;
 END$$;
+SELECT
+  CASE
+    WHEN GROUPING(date_trunc('day', created_on)) = 0 THEN 'DAILY'
+    WHEN GROUPING(date_trunc('week', created_on)) = 0 THEN 'WEEKLY'
+    WHEN GROUPING(date_trunc('month', created_on)) = 0 THEN 'MONTHLY'
+    WHEN GROUPING(date_trunc('quarter', created_on)) = 0 THEN 'QUARTERLY'
+    WHEN GROUPING(date_trunc('year', created_on)) = 0 THEN 'YEARLY'
+  END AS period_type,
+
+  date_trunc('day', created_on)     AS day,
+  date_trunc('week', created_on)    AS week,
+  date_trunc('month', created_on)   AS month,
+  date_trunc('quarter', created_on) AS quarter,
+  date_trunc('year', created_on)    AS year,
+
+  COUNT(*) AS case_count
+FROM case_table
+GROUP BY GROUPING SETS (
+  (date_trunc('day', created_on)),
+  (date_trunc('week', created_on)),
+  (date_trunc('month', created_on)),
+  (date_trunc('quarter', created_on)),
+  (date_trunc('year', created_on))
+)
+ORDER BY year, quarter, month, week, day;
