@@ -103,4 +103,23 @@ FROM case c
 LEFT JOIN assessment_detail ad
     ON ad.case_id = c.case_id
 GROUP BY c.case_id;
+_______
+INSERT INTO assessment_detail_new (
+    case_id,
+    score,
+    remarks,
+    created
+)
+SELECT
+    ad.case_id,
+    ad.score,
+    ad.remarks,
+    ad.created
+FROM assessment_detail ad
+JOIN "case" c
+    ON c.case_id = ad.case_id
+WHERE
+    c.assessment_status = 'APPROVED'
+    AND EXTRACT(YEAR FROM ad.created) = 2025
+    AND EXTRACT(QUARTER FROM ad.created) = 2;
 
