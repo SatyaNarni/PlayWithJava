@@ -86,4 +86,21 @@ GROUP BY GROUPING SETS (
   (year)
 )
 ORDER BY year, quarter, month, week, day;
+-------SELECT
+    date_trunc('quarter', c.caseCreatedOn) AS quarter,
+    COUNT(d.adid) AS assessment_record_count
+FROM cra_case c
+JOIN cra_case_assessment_detail d
+    ON d.case_id = c.case_id
+WHERE c.assessment_status = 'Completed'
+GROUP BY date_trunc('quarter', c.caseCreatedOn)
+ORDER BY quarter;
+------
+SELECT
+    c.*,
+    COUNT(ad.case_id) AS assessment_count
+FROM case c
+LEFT JOIN assessment_detail ad
+    ON ad.case_id = c.case_id
+GROUP BY c.case_id;
 
