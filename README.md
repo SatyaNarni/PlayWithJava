@@ -1,17 +1,20 @@
-public class GenericSpecification {
+public class GenericSpecificationBuilder {
 
-    public static <T> Specification<T> build(SearchRequest request, Class<T> entityClass) {
+    public static <T> Specification<T> build(
+            FetchGridDataRequest.SearchRequest request,
+            Class<T> entityClass
+    ) {
 
         return (root, query, cb) -> {
 
             List<Predicate> predicates = new ArrayList<>();
 
-            // ✅ 1. FILTERS (IN)
+            // ✅ 1. FILTERS (attribute + values → IN)
             if (request.getFilters() != null) {
-                for (Map.Entry<String, List<Object>> entry : request.getFilters().entrySet()) {
+                for (FetchGridDataRequest.Filter filter : request.getFilters()) {
 
-                    String field = entry.getKey();
-                    List<Object> values = entry.getValue();
+                    String field = filter.getAttribute();
+                    List<String> values = filter.getValue();
 
                     if (values != null && !values.isEmpty()) {
                         predicates.add(root.get(field).in(values));
@@ -48,41 +51,42 @@ public class GenericSpecification {
 }
 
 --------
-public <T> Page<T> search(
-        SearchRequest request,
-        JpaSpecificationExecutor<T> repository,
-        Class<T> entityClass
-) {
+@Component
+public class GenericSearchExecutor {
 
-    // 🔹 Build Specification
-    Specification<T> spec = GenericSpecification.build(request, entityClass);
+    public <T> Page<T> execute(
+            FetchGridDataRequest request,
+            JpaSpecificationExecutor<T> repository,
+            Class<T> entityClass
+    ) {
 
-    // 🔹 Sorting
-    List<Sort.Order> orders = new ArrayList<>();
+        FetchGridDataRequest.SearchRequest searchRequest = request.getSearchRequest();
 
-    if (request.getSort() != null) {
-        for (SortRequest s : request.getSort()) {
-            orders.add(new Sort.Order(
-                    Sort.Direction.fromString(s.getDirection()),
-                    s.getField()
-            ));
+        // ✅ Build Specification
+        Specification<T> spec =
+                GenericSpecificationBuilder.build(searchRequest, entityClass);
+
+        // ✅ Sorting
+        List<Sort.Order> orders = new ArrayList<>();
+
+        if (searchRequest.getSort() != null) {
+            for (FetchGridDataRequest.Sort s : searchRequest.getSort()) {
+
+                orders.add(new Sort.Order(
+                        Sort.Direction.fromString(s.getOrder()), // ASC / DESC
+                        s.getAttribute()
+                ));
+            }
         }
+
+        // ✅ Pagination
+        Pageable pageable = PageRequest.of(
+                request.getPageNumber(),
+                request.getPageSize(),
+                orders.isEmpty() ? Sort.unsorted() : Sort.by(orders)
+        );
+
+        // ✅ Execute
+        return repository.findAll(spec, pageable);
     }
-
-    Pageable pageable = PageRequest.of(
-            request.getPage(),
-            request.getSize(),
-            Sort.by(orders)
-    );
-
-    // 🔹 Execute
-    return repository.findAll(spec, pageable);
 }
-
--------
-
-Page<Student> result = genericService.search(
-        request,
-        studentRepository,
-        Student.class
-);
