@@ -1,50 +1,39 @@
-import jakarta.persistence.criteria.*;
-import org.springframework.data.jpa.domain.Specification;
 
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.stream.Collectors;
+Uploaded image
+Give best mail content 
 
-public class GenericSearchSpecificationBuilder {
+Here’s a cleaner, more professional version of your email—clear, structured, and to the point:
 
-    // ✅ Entity + Field based JOIN configuration
-    private static final Map<String, String> JOIN_FIELDS = new HashMap<>();
+Subject: Confirmation Required: Source Fields & Label Casing for New Questions (V5)
 
-    static {
-        // format → EntityName.fieldName → column in joined table
-        JOIN_FIELDS.put("Student.applicability", "val");
-        JOIN_FIELDS.put("Order.status", "name");
+Hi [Name],
 
-        // add more if needed
-    }
+I’m currently blocked while configuring field rules for the new questions as part of V5.
 
-    public static <T> Specification<T> build(SearchRequest request, Class<T> entityClass) {
+Since there are multiple input answer fields, could you please confirm the following:
 
-        return (Root<T> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+Which answer fields require Source Title, Source URL, and Comments
 
-            List<Predicate> predicates = new ArrayList<>();
+Under what conditions (based on selected options) these fields should be mandatory
 
-            if (request != null && request.getFilters() != null && !request.getFilters().isEmpty()) {
+Additionally, once confirmed:
 
-                for (SearchRequest.Filter filter : request.getFilters()) {
+The ADO needs to be updated accordingly
 
-                    String field = filter.getAttribute();
-                    List<String> values = filter.getValue();
+The Figma designs also need to be aligned with these rules
 
-                    // ✅ skip invalid field
-                    if (!hasField(entityClass, field)) {
-                        continue;
-                    }
+I also need your confirmation on the field label casing used in the UI.
+Currently, the labels are in lowercase, whereas existing fields follow Title Case.
 
-                    if (values != null && !values.isEmpty()) {
+Example:
 
-                        try {
-                            Field entityField = entityClass.getDeclaredField(field);
-                            entityField.setAccessible(true);
+roadmap investments | meaningfulness (lowercase)
 
-                            Class<?> fieldType = entityField.getType();
+Roadmap Investments | Meaningfulness (Title Case)
 
-                            String entityFieldKey = entityClass.getSimpleName() + "." + field;
+Please confirm the preferred standard so we can maintain consistency across the application.
+
+Thanks,
 
                             List<Object> typedValues = new ArrayList<>();
 
