@@ -1,0 +1,425 @@
+/*==========================================================
+PART 1 - LOAD QUESTIONNAIRE VERSION + ASSESSMENT DATA
+==========================================================*/
+
+WITH case_info AS
+(
+    SELECT
+        case_id,
+        questionnaire_version
+    FROM sch_cra.cra_case
+    WHERE case_id = :case_id
+),
+
+question_master AS
+(
+    SELECT
+        q.question_id,
+        q.depends_on AS question_depends_on
+    FROM sch_cra.form_ref_question q
+    JOIN sch_cra.form_ref_question_version qv
+         ON q.question_id = qv.question_id
+    JOIN case_info c
+         ON c.questionnaire_version = qv.version_id
+),
+
+field_master AS
+(
+    SELECT
+        f.field_id,
+        f.question_id,
+        f.is_mandatory,
+        f.depends_on AS field_depends_on
+    FROM sch_cra.form_ref_field f
+    JOIN sch_cra.form_ref_field_version fv
+         ON fv.field_id = f.field_id
+    JOIN case_info c
+         ON c.questionnaire_version = fv.version_id
+),
+
+assessment AS
+(
+    SELECT
+        ad.case_id,
+        ad.field_id,
+        ad.field_value
+    FROM sch_cra.cra_case_assessment_detail ad
+    WHERE ad.case_id = :case_id
+),
+
+mandatory_fields AS
+(
+    SELECT
+        field_id,
+        question_id
+    FROM field_master
+    WHERE is_mandatory='Y'
+)
+
+SELECT *
+FROM mandatory_fields;
+/*==========================================================
+PART 2 - EVALUATE DISPLAY RULE CONDITIONS
+==========================================================*/
+
+WITH case_info AS
+(
+    SELECT questionnaire_version
+    FROM sch_cra.cra_case
+    WHERE case_id = :case_id
+),
+
+assessment AS
+(
+    SELECT
+        field_id,
+        field_value
+    FROM sch_cra.cra_case_assessment_detail
+    WHERE case_id = :case_id
+),
+
+rule_groups AS
+(
+    SELECT
+        rg.rule_group_id,
+        rg.target_field_id,
+        rg.target_question_id,
+        rg.target_property_name,
+        rg.rule_pattern
+    FROM sch_cra.form_ref_display_rule_group rg
+    JOIN sch_cra.form_ref_display_rule_group_version rgv
+           ON rg.rule_group_id = rgv.rule_group_id
+    JOIN case_info ci
+           ON ci.questionnaire_version = rgv.version_id
+    WHERE rg.target_property_name='mandatory'
+),
+
+rules AS
+(
+    SELECT
+        r.rule_id,
+        r.rule_group_id,
+        r.logical_operator,
+        r.rule_order
+    FROM sch_cra.form_ref_display_rule r
+),
+
+conditions AS
+(
+    SELECT
+        c.condition_id,
+        c.rule_id,
+        c.parent_field_id,
+        c.parent_field_value,
+        c.operator
+    FROM sch_cra.form_ref_display_rule_condition c
+),
+
+condition_result AS
+(
+    SELECT
+
+        rg.rule_group_id,
+
+        rg.target_field_id,
+
+        r.rule_id,
+
+        c.condition_id,
+
+        c.parent_field_id,
+
+        a.field_value AS actual_value,
+
+        c.parent_field_value AS expected_value,
+
+        CASE
+
+            WHEN a.field_value IS NULL
+                THEN FALSE
+
+            WHEN a.field_value::text =
+                 c.parent_field_value::text
+                THEN TRUE
+
+            ELSE FALSE
+
+        END condition_result
+
+    FROM rule_groups rg
+
+    JOIN rules r
+      ON rg.rule_group_id=r.rule_group_id
+
+    JOIN conditions c
+      ON r.rule_id=c.rule_id
+
+    LEFT JOIN assessment a
+      ON a.field_id=c.parent_field_id
+
+)
+
+SELECT *
+FROM condition_result
+ORDER BY
+rule_group_id,
+rule_id,
+condition_id;
+
+/*==========================================================
+PART 3 - EVALUATE RULE RESULTS
+==========================================================*/
+
+WITH rule_condition_result AS
+(
+    SELECT
+
+        r.rule_group_id,
+
+        r.rule_id,
+
+        upper(r.logical_operator) logical_operator,
+
+        cr.condition_result
+
+    FROM sch_cra.form_ref_display_rule r
+
+    JOIN condition_result cr
+      ON cr.rule_id = r.rule_id
+)
+
+SELECT
+
+    rule_group_id,
+
+    rule_id,
+
+    logical_operator,
+
+    CASE
+
+        WHEN logical_operator='AND'
+
+            THEN bool_and(condition_result)
+
+        WHEN logical_operator='OR'
+
+            THEN bool_or(condition_result)
+
+        ELSE FALSE
+
+    END AS rule_result
+
+FROM rule_condition_result
+
+GROUP BY
+
+rule_group_id,
+
+rule_id,
+
+logical_operator
+
+ORDER BY
+
+rule_group_id,
+
+rule_id;
+
+/*==========================================================
+PART 4 - PREPARE RULE RESULTS
+==========================================================*/
+
+WITH rule_results AS
+(
+    SELECT
+        rr.rule_group_id,
+        rr.rule_id,
+        rr.rule_result
+    FROM rule_result rr
+)
+
+SELECT
+
+    rg.rule_group_id,
+
+    rg.target_field_id,
+
+    rg.target_question_id,
+
+    rg.rule_pattern,
+
+    string_agg(
+        rr.rule_id || '=' ||
+        CASE
+            WHEN rr.rule_result THEN 'TRUE'
+            ELSE 'FALSE'
+        END,
+        ','
+        ORDER BY rr.rule_id
+    ) rule_values
+
+FROM sch_cra.form_ref_display_rule_group rg
+
+JOIN rule_results rr
+ON rr.rule_group_id = rg.rule_group_id
+
+WHERE rg.target_property_name='mandatory'
+
+GROUP BY
+
+rg.rule_group_id,
+rg.target_field_id,
+rg.target_question_id,
+rg.rule_pattern
+
+ORDER BY rg.rule_group_id;
+
+WITH mandatory_candidates AS
+(
+SELECT DISTINCT
+
+    rg.rule_group_id,
+
+    rg.target_field_id,
+
+    rg.target_question_id,
+
+    rg.rule_pattern
+
+FROM sch_cra.form_ref_display_rule_group rg
+
+JOIN rule_result rr
+
+ON rr.rule_group_id=rg.rule_group_id
+
+WHERE
+
+rg.target_property_name='mandatory'
+
+AND rr.rule_result=TRUE
+
+)
+
+SELECT *
+
+FROM mandatory_candidates;
+
+/*==========================================================
+PART 6 - FINAL MANDATORY FIELD VALIDATION
+==========================================================*/
+
+WITH case_info AS
+(
+    SELECT questionnaire_version
+    FROM sch_cra.cra_case
+    WHERE case_id = :case_id
+),
+
+/* Always Mandatory Fields */
+always_mandatory AS
+(
+    SELECT DISTINCT
+           f.field_id,
+           f.question_id,
+           'STATIC' AS mandatory_type
+    FROM sch_cra.form_ref_field f
+    JOIN sch_cra.form_ref_field_version fv
+      ON fv.field_id=f.field_id
+    JOIN case_info ci
+      ON ci.questionnaire_version=fv.version_id
+    WHERE f.is_mandatory='Y'
+),
+
+/* Rule Based Mandatory Fields */
+rule_based_mandatory AS
+(
+    SELECT DISTINCT
+
+           rg.target_field_id AS field_id,
+
+           rg.target_question_id AS question_id,
+
+           'RULE' AS mandatory_type
+
+    FROM sch_cra.form_ref_display_rule_group rg
+
+    JOIN rule_result rr
+      ON rr.rule_group_id=rg.rule_group_id
+
+    WHERE rg.target_property_name='mandatory'
+
+      AND rr.rule_result=TRUE
+
+),
+
+/* Merge Both */
+mandatory_fields AS
+(
+    SELECT * FROM always_mandatory
+
+    UNION
+
+    SELECT * FROM rule_based_mandatory
+),
+
+assessment AS
+(
+    SELECT
+
+        field_id,
+
+        field_value
+
+    FROM sch_cra.cra_case_assessment_detail
+
+    WHERE case_id=:case_id
+)
+
+SELECT
+
+    mf.question_id,
+
+    mf.field_id,
+
+    mf.mandatory_type,
+
+    a.field_value,
+
+    CASE
+
+        WHEN a.field_id IS NULL
+
+             THEN 'NOT ANSWERED'
+
+        WHEN a.field_value IS NULL
+
+             THEN 'NULL VALUE'
+
+        WHEN trim(a.field_value::text)=''
+
+             THEN 'BLANK VALUE'
+
+        ELSE 'OK'
+
+    END validation_status
+
+FROM mandatory_fields mf
+
+LEFT JOIN assessment a
+
+ON a.field_id=mf.field_id
+
+WHERE
+
+a.field_id IS NULL
+
+OR a.field_value IS NULL
+
+OR trim(a.field_value::text)=''
+
+ORDER BY
+
+mf.question_id,
+
+mf.field_id;
