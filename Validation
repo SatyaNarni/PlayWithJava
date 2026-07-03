@@ -1,0 +1,93 @@
+Part 1: Base data (Questionnaire version + Answers + Versioned fields)
+WITH case_info AS (
+    SELECT
+        case_id,
+        questionnaire_version
+    FROM sch_cra.cra_case
+    WHERE case_id = :case_id
+),
+assessment_data AS (
+    SELECT
+        ad.case_id,
+        ad.field_id,
+        ad.field_value
+    FROM sch_cra.cra_case_assessment_detail ad
+    WHERE ad.case_id = :case_id
+),
+question_version AS (
+    SELECT
+        q.question_id,
+        q.depends_on,
+        qv.version_id
+    FROM sch_cra.form_ref_question q
+    JOIN sch_cra.form_ref_question_version qv
+      ON q.question_id = qv.question_id
+    JOIN case_info ci
+      ON ci.questionnaire_version = qv.version_id
+),
+field_version AS (
+    SELECT
+        f.field_id,
+        f.question_id,
+        f.is_mandatory,
+        f.depends_on,
+        fv.version_id
+    FROM sch_cra.form_ref_field f
+    JOIN sch_cra.form_ref_field_version fv
+      ON fv.field_id = f.field_id
+    JOIN case_info ci
+      ON ci.questionnaire_version = fv.version_id
+)
+SELECT *
+FROM field_version;
+
+Part 2: Always mandatory fields
+WITH mandatory_fields AS (
+    SELECT
+        field_id,
+        question_id
+    FROM sch_cra.form_ref_field f
+    JOIN sch_cra.form_ref_field_version fv
+      ON fv.field_id = f.field_id
+    JOIN sch_cra.cra_case cc
+      ON cc.questionnaire_version = fv.version_id
+    WHERE cc.case_id = :case_id
+      AND f.is_mandatory = 'Y'
+)
+SELECT *
+FROM mandatory_fields;
+
+3. Part 3: Rule groups (Mandatory only)
+SELECT
+    rg.rule_group_id,
+    rg.target_question_id,
+    rg.target_field_id,
+    rg.target_property_name,
+    rg.rule_pattern,
+    rg.rule_level
+FROM sch_cra.form_ref_display_rule_group rg
+JOIN sch_cra.form_ref_display_rule_group_version rgv
+  ON rg.rule_group_id = rgv.rule_group_id
+JOIN sch_cra.cra_case cc
+  ON cc.questionnaire_version = rgv.version_id
+WHERE cc.case_id = :case_id
+  AND rg.target_property_name = 'mandatory';
+
+Part 4: Rule Conditions vs Assessment
+SELECT
+    c.condition_id,
+    c.rule_id,
+    c.parent_field_id,
+    c.parent_field_value,
+    ad.field_value,
+    CASE
+        WHEN ad.field_value::text = c.parent_field_value::text
+        THEN TRUE
+        ELSE FALSE
+    END AS condition_result
+FROM sch_cra.form_ref_display_rule_condition c
+LEFT JOIN sch_cra.cra_case_assessment_detail ad
+       ON ad.field_id = c.parent_field_id
+      AND ad.case_id = :case_id;
+
+
