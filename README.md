@@ -22,8 +22,8 @@ SELECT
     ad.case_id,
     ad.field_value
 
-FROM sch_cra.form_ref_question q
-JOIN sch_cra.form_ref_field f
+FROM sch_cra.form_ref_field f
+JOIN sch_cra.form_ref_question q
     ON q.question_id = f.question_id
 
 LEFT JOIN sch_cra.form_ref_display_rule_group rg
@@ -43,7 +43,12 @@ LEFT JOIN sch_cra.form_ref_condition c
 
 LEFT JOIN sch_cra.assessment_details ad
     ON ad.field_id = f.field_id
-   AND ad.case_id = :case_id
+   AND ad.case_id = :caseId
 
-WHERE f.field_id = :field_id
-ORDER BY rg.rule_group_id, r.rule_id, c.condition_id;
+WHERE ad.case_id = :caseId
+ORDER BY
+    q.question_id,
+    f.field_id,
+    rg.rule_group_id,
+    r.rule_id,
+    c.condition_id;
