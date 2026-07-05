@@ -1,55 +1,18 @@
-SELECT
-    cc.questionnaire_version,
 
-    q.question_id,
-    qv.version,
+Hi Helath insurance, I am looking to vaccinate my children but there is no network hospital avialbke from hour app and when I reuqest call back reg the same I havent received the same and I raised the request for around 7 days i font know what you giys are doing but when i vaccinate my child and keep all the things still aksing vaccinatios certificate the hospital near by me are small and they dont provide . Due date is approaching for vaccination hope you guys will get back soon
 
-    f.field_id,
-    fv.version,
-    f.is_mandatory,
+Here's a professional and firm version of your message:
 
-    rg.rule_group_id,
-    rgv.version,
-    rg.rule_type,
-    rg.rule_level,
+Subject: Urgent Assistance Required – Vaccination Network Hospital
 
-    r.rule_id,
+Hi Health Insurance Team,
 
-    c.condition_id,
-    c.parent_field_id,
-    c.parent_field_value,
+I am looking to vaccinate my child, but there are no network hospitals available in your app. I also requested a callback regarding this issue around 7 days ago, but I have not received any response.
 
-    ad.field_value
+I am not sure what is causing this delay, especially when my child's vaccination due date is approaching.
 
-FROM sch_cra.cra_case cc
+The nearby hospitals available to me are small clinics that do not issue vaccination certificates. However, your team is asking for a vaccination certificate to process the claim, which is not feasible in my situation.
 
-JOIN sch_cra.form_ref_question_version qv
-    ON qv.version = cc.questionnaire_version
+I request you to urgently provide a solution or suggest a nearby network hospital where I can get my child vaccinated. Since the due date is approaching, I would appreciate an immediate response.
 
-JOIN sch_cra.form_ref_question q
-    ON q.question_id = qv.question_id
-
-JOIN sch_cra.form_ref_field_version fv
-    ON fv.version = cc.questionnaire_version
-
-JOIN sch_cra.form_ref_field f
-    ON f.field_id = fv.field_id
-   AND f.question_id = q.question_id
-
-LEFT JOIN sch_cra.form_ref_display_rule_group_version rgv
-    ON rgv.version = cc.questionnaire_version
-
-LEFT JOIN sch_cra.form_ref_display_rule_group rg
-    ON rg.rule_group_id = rgv.rule_group_id
-
-LEFT JOIN sch_cra.form_ref_display_rule r
-    ON r.rule_group_id = rg.rule_group_id
-
-LEFT JOIN sch_cra.form_ref_condition c
-    ON c.rule_id = r.rule_id
-
-LEFT JOIN sch_cra.assessment_details ad
-    ON ad.case_id = cc.case_id
-   AND ad.field_id = f.field_id
-
-WHERE cc.case_id = :caseId;
+Thank you.
