@@ -1,18 +1,135 @@
+h1. Display Rule Versioning
 
-Hi Helath insurance, I am looking to vaccinate my children but there is no network hospital avialbke from hour app and when I reuqest call back reg the same I havent received the same and I raised the request for around 7 days i font know what you giys are doing but when i vaccinate my child and keep all the things still aksing vaccinatios certificate the hospital near by me are small and they dont provide . Due date is approaching for vaccination hope you guys will get back soon
+h2. Overview
 
-Here's a professional and firm version of your message:
+Currently, *form_ref_display_rule_group* stores *version_id*. However, the application fetches all active rule groups irrespective of the form version, making *version_id* ineffective.
 
-Subject: Urgent Assistance Required – Vaccination Network Hospital
+To improve reusability and reduce duplicate configurations, introduce a new mapping table *form_ref_display_rule_group_version* and remove *version_id* from *form_ref_display_rule_group*.
 
-Hi Health Insurance Team,
+----
 
-I am looking to vaccinate my child, but there are no network hospitals available in your app. I also requested a callback regarding this issue around 7 days ago, but I have not received any response.
+h2. Problem Statement
 
-I am not sure what is causing this delay, especially when my child's vaccination due date is approaching.
+* version_id is not used during rule retrieval.
+* All active rule groups are processed, increasing overhead as more versions are introduced.
+* Duplicate rule group configurations exist across multiple form versions, resulting in:
+** Duplicate data
+** Increased maintenance
+** Reduced scalability
 
-The nearby hospitals available to me are small clinics that do not issue vaccination certificates. However, your team is asking for a vaccination certificate to process the claim, which is not feasible in my situation.
+----
 
-I request you to urgently provide a solution or suggest a nearby network hospital where I can get my child vaccinated. Since the due date is approaching, I would appreciate an immediate response.
+h2. Proposed Solution
 
-Thank you.
+Create a new mapping table *form_ref_display_rule_group_version* to associate *Form Versions* with *Display Rule Groups*.
+
+This allows:
+* Reuse of rule groups across multiple versions.
+* Processing of only applicable rule groups.
+* Elimination of duplicate configurations.
+
+----
+
+h2. Design
+
+h3. Current
+
+{code}
+Form Version
+      |
+      V
+form_ref_display_rule_group
+      |
+ version_id
+{code}
+
+h3. Proposed
+
+{code}
+Form Version
+      |
+      V
+form_ref_display_rule_group_version
+      |
+      V
+form_ref_display_rule_group
+{code}
+
+----
+
+h2. Database Changes
+
+h3. New Table
+
+|| Column || Description ||
+| id | Primary Key |
+| version_id | Form Version ID |
+| rule_group_id | Display Rule Group ID |
+| active | Active Flag |
+| created_by | Audit |
+| created_date | Audit |
+| updated_by | Audit |
+| updated_date | Audit |
+
+h3. Existing Table
+
+* Remove *version_id* from *form_ref_display_rule_group*.
+
+----
+
+h2. Migration Plan
+
+# Create *form_ref_display_rule_group_version* table.
+# Migrate existing *version_id* values into the new mapping table.
+# Update application logic to use the mapping table.
+# Remove *version_id* after successful validation.
+
+----
+
+h2. Code Changes
+
+* Update repository queries to use the mapping table.
+* Update service layer to retrieve rule groups through the mapping table.
+* Ensure mapping creation is idempotent for new form versions.
+
+----
+
+h2. SQL Scripts
+
+h3. DDL
+
+{code:sql}
+-- CREATE TABLE script
+{code}
+
+h3. Migration Script
+
+{code:sql}
+-- Data migration script
+{code}
+
+h3. Rollback Script
+
+{code:sql}
+-- Rollback script
+{code}
+
+----
+
+h2. Testing
+
+* Validate existing forms.
+* Verify only mapped rule groups are processed.
+* Validate migrated data.
+* Perform regression testing.
+
+----
+
+h2. Benefits
+
+* Reusable rule groups.
+* Reduced duplicate configurations.
+* Improved maintainability.
+* Better scalability.
+* Reduced runtime overhead.
+* Cleaner database design.
