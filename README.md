@@ -1,73 +1,27 @@
-WITH cra_fields AS (
-    SELECT
-        q.section_id,
-        q.question_id,
-        q.question_number,
-        q.question_text,
-        q.display_order AS question_display_order,
+Overall Contribution – Workflow & UI Uplift, Questionnaire, Performance & Modernization
 
-        f.field_id,
-        f.field_type,
-        f.field_title,
-        f.display_order AS field_display_order
+I would appreciate your feedback on my overall contributions and the value I have delivered across the product and releases so far. I would particularly value your feedback on my ownership, technical contributions, proactive problem solving, delivery, collaboration, and overall impact on the product.
 
-    FROM sch_cra.form_ref_field f
 
-    JOIN sch_cra.form_ref_question q
-        ON q.question_id = f.question_id
+Over the course of the releases, I have contributed to several key initiatives and improvements:
 
-    JOIN sch_cra.form_ref_field_version fv
-        ON fv.field_id = f.field_id
+• Worked on the Camunda migration to the internal BPMN solution, contributing to workflow modernization and addressing the implementation challenges involved.
 
-    JOIN sch_cra.form_ref_question_version qv
-        ON qv.question_id = q.question_id
-       AND qv.version_id = fv.version_id
+• Implemented Case Assessment transaction data partitioning to improve application performance and make archiving of older data easier and more efficient.
 
-    JOIN sch_cra.form_ref_version v
-        ON v.version_id = fv.version_id
+• Proactively identified and addressed critical issues before they could surface in production, helping reduce production risks and improve overall application stability.
 
-    WHERE v.version_id = 'CRA-V5'
-      AND q.section_id IN (
-          'DND3',
-          'GPR3',
-          'PRA3',
-          'GTR3',
-          'CTP3'
-      )
-      AND f.field_title IN (
-          'Source title',
-          'Source URL'
-      )
-      AND f.parent_field_id IS NULL
-)
+• Refactored existing implementations to improve code reusability, maintainability, and scalability, and reduced hardcoded values and logic in the code to almost zero wherever possible.
 
-SELECT
-    cf.section_id,
-    cf.question_id,
-    cf.question_number,
-    cf.question_text,
-    cf.question_display_order,
+• Contributed approximately 70% of the UI uplift work, covering the questionnaire and Case Information screens, while ensuring existing functionality was not broken and in-flight/production cases were not impacted.
 
-    cf.field_id,
-    cf.field_type,
-    cf.field_title,
-    cf.field_display_order,
+• Worked on the complete V5 questionnaire implementation, covering all required questionnaire sections and Case Information, while focusing on reusable components and a common save approach.
 
-    drg.*
+Across these initiatives, I focused not only on delivering the required functionality but also on improving performance, maintainability, reusability, reliability, and overall solution quality while ensuring existing functionality and production cases were protected.
 
-FROM cra_fields cf
 
-LEFT JOIN sch_cra.display_rule_group drg
-    ON drg.target_field_id = cf.field_id
 
-ORDER BY
-    CASE cf.section_id
-        WHEN 'DND3' THEN 1
-        WHEN 'GPR3' THEN 2
-        WHEN 'PRA3' THEN 3
-        WHEN 'GTR3' THEN 4
-        WHEN 'CTP3' THEN 5
-        ELSE 999
-    END,
-    cf.question_display_order,
-    cf.field_display_order;
+I would appreciate your feedback on areas where I can improve further, particularly around product understanding, technical design, prioritization, stakeholder communication, and taking greater end-to-end ownership. I would also like to understand where I can create more value and have a greater impact in future releases.
+
+
+I would appreciate your overall feedback on my contributions so far, including the quality and impact of my work, ownership, proactive problem solving, collaboration, and ability to deliver complex changes without impacting existing functionality. Your feedback will help me understand my strengths and identify areas where I can continue to grow and contribute more effectively to the product and team.
